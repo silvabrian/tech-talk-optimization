@@ -1,6 +1,6 @@
 #' General Purpose Optimization Techniques
 #' 
-#' This script provides some examples of applying simulated annealing and L-BFGS optimization techniques.
+#' This script provides some examples of applying BFGS/L-BFGS and simulated annealing optimization techniques.
 #' 
 #' @author Brian Silva
 #' 
