@@ -8,7 +8,7 @@
 ## Some initial setup
 
 # The packages we are going to be using
-packages <- c('GenSA',  'plot3D')
+packages <- c('GenSA', 'optimx',  'plot3D')
 
 # Install the packages if necessary
 install.packages(packages)
@@ -19,60 +19,60 @@ lapply(packages, require, character.only=T)
 # Function to measure elapsed time
 elapsed <- function(fn) {
   
-  return(round(system.time(fn)[3], 4))
+  return(round(system.time(suppressWarnings(fn))[3], 4))
   
 }
 
 ## Examples - BFGS/L-BFGS-B
 
 # Log-likelihood of normal distribution
-norm.loglik <- function(theta, x){
+norm.loglik <- function(theta, X){
   mu <- theta[1]
   sigma2 <- theta[2]
-  n = length(x)
-  return(-0.5 * n * log(2 * pi) - 0.5 * n * log(sigma2) - (0.5 / sigma2) * sum((x - mu)^2))
+  n = length(X)
+  return(-0.5 * n * log(2 * pi) - 0.5 * n * log(sigma2) - (0.5 / sigma2) * sum((X - mu)^2))
 }
 
-norm.loglik.grad <- function(theta, x) {
+norm.loglik.grad <- function(theta, X) {
   mu <- theta[1]
   sigma2 <- theta[2]
-  n = length(x)
-  return(c(1/sigma2 * (sum(x) - n*mu), 
-           0.5/sigma2 * ((1/sigma2) * sum((x-mu)^2) - n)))
+  n = length(X)
+  return(c(1/sigma2 * (sum(X) - n*mu), 
+           0.5/sigma2 * ((1/sigma2) * sum((X-mu)^2) - n)))
 }
 
 # Optimization
-x <- rnorm(10000, mean=2, sd=3)
+X <- rnorm(10000, mean=2, sd=3)
 
 # With gradient
-time <- elapsed(ret <- optim(par=c(0, 1), 
-                             fn=norm.loglik, 
-                             gr=norm.loglik.grad, 
-                             lower=c(-Inf, 0), 
-                             upper=c(Inf, Inf), 
-                             x=x, 
-                             method='L-BFGS-B', 
-                             control=list(fnscale=-1)))
+time <- elapsed(ret <- optimx(par=c(0, 1), 
+                              fn=norm.loglik, 
+                              gr=norm.loglik.grad, 
+                              lower=c(-Inf, 0), 
+                              upper=c(Inf, Inf), 
+                              X=X, 
+                              method='L-BFGS-B', 
+                              control=list(maximize=T)))
 
-ret['par']
+ret
 paste('Elapsed:', time, 'seconds')
 
 # Without gradient
 # Uses finite-difference approximation
-time <- elapsed(ret <- optim(par=c(0, 1), 
-                             fn=norm.loglik, 
-                             lower=c(-Inf, 0), 
-                             upper=c(Inf, Inf), 
-                             x=x, 
-                             method='L-BFGS-B', 
-                             control=list(fnscale=-1)))
+time <- elapsed(ret <- optimx(par=c(0, 1), 
+                              fn=norm.loglik, 
+                              lower=c(-Inf, 0), 
+                              upper=c(Inf, Inf), 
+                              X=X, 
+                              method='L-BFGS-B', 
+                              control=list(maximize=T)))
 
-ret['par']
+ret
 paste('Elapsed:', time, 'seconds')
 
 # Practice
 
-# TODO: Minimize bagf.prac using optim's BFGS method with initial x = c(0, 0)
+# TODO: Minimize bfgs.prac using optimx's BFGS method with initial x = c(0, 0)
 
 bfgs.prac <- function(x) {
   
@@ -89,29 +89,29 @@ bfgs.prac.grad <- function(x) {
 
 # Add your code to the function below
 
-time <- elapsed(ret <- optim(# Your code here
-                             ))
+time <- elapsed(ret <- optimx(# Your code here
+                              ))
 
-ret[c('value', 'par', 'counts')]
+ret
 paste('Elapsed:', time, 'seconds')
 
 # Compare your result with the following
 
 # With gradient
-time <- elapsed(ret <- optim(par=c(0, 0), 
-                             fn=bfgs.prac,
-                             gr=bfgs.prac.grad,
-                             method='BFGS'))
+time <- elapsed(ret <- optimx(par=c(0, 0), 
+                              fn=bfgs.prac, 
+                              gr=bfgs.prac.grad, 
+                              method='BFGS'))
 
-ret[c('value', 'par', 'counts')]
+ret
 paste('Elapsed:', time, 'seconds')
 
 # Without gradient
-time <- elapsed(ret <- optim(par=c(0, 0), 
-                             fn=bsgf.prac,
-                             method='BFGS'))
+time <- elapsed(ret <- optimx(par=c(0, 0), 
+                              fn=bfgs.prac, 
+                              method='BFGS'))
 
-ret[c('value', 'par', 'counts')]
+ret
 paste('Elapsed:', time, 'seconds')
 
 
@@ -198,7 +198,7 @@ x2 <- M$y
 z <- apply(array(c(x1, x2), dim=c(resolution, resolution, 2)), c(1,2), Levi)
 surf3D(x1, x2, z, phi=20, colkey=F, main='Levi Function')
 
-# Add your code to the function below
+# Add your code to the function below (Note: dimension=2 and -10 <= x_1, x_2 <= 10)
 
 time <- elapsed(ret <- GenSA(# Your code here
                              ))
